@@ -1,0 +1,244 @@
+# 7DTD-AHK-Script
+
+; Script Function:
+;	7 Days to Die automation and all keyboard controls instead of mouse
+;
+; Changed Hotkeys within 7 Days to Die:
+; WASD to arrow keys
+; Primary (mouse button) to Left Ctrl
+; Secondary (mouse button) to Left Alt
+;
+; Script Hotkeys:
+;	\	Global stop key (walking, running, mining, farming, etc)
+;	[	Autowalk
+;	]	Autorun
+;	L	Autoloot containers and zombies
+;	O	Autopickup (DOES NOT WORK, IT Work)
+;	P	Automine (DOES NOT STOP WHEN HITTING \, NOW IT DOES)
+;	'	Autoplant
+;
+; Wishlist:
+;	Change Autoloot (L) to F12 (DONE)
+;	Change Autopickup (O) to F11 (DONE)
+;	Change Automine (P) to F10 (DONE)
+;	Add F9 - Hit Left Alt 5 times per second until \ is hit (DONE, but almost the same like Automine???)
+
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+#SingleInstance force ; Only one instance at a time
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+
+;; DEBUG output
+Cinit()
+
+running := 0
+spaceDisabled := False
+
+;|::
+;\::
++::
+=::
+
+	Cadd("stop everything")
+	; stop movement
+	ControlSend, , {LShift up}{Up up}, 7 Days To Die
+	; stop everything
+	running := 0
+return
+
+#IfWinActive, 7 Days To Die
+
+[::
+{::
+	; walk
+	Cadd("walk")
+	ControlSend, , {LShift up}{Up down}, 7 Days To Die
+return
+
+]::
+	; run
+	Cadd("run")
+	ControlSend, , {LShift down}{Up down}, 7 Days To Die
+return
+
+F12::
+	; search and take all
+	Cadd("search and take all")
+
+	ControlSend, , e, 7 Days To Die
+	Cadd("press - e")
+	sleep 500
+	ControlSend, , r, 7 Days To Die
+	Cadd("press - r")
+return
+
+;auto mine
+F10::
+	Cadd("automine")
+
+	running := 1
+	Loop
+	{
+		if (mod(A_Index,16) = 0)
+		{
+			ControlSend, , {e down}, 7 Days To Die
+			Cadd("press - e down")
+		} else if (mod(A_Index,16) = 15) {
+			ControlSend, , {e up}, 7 Days To Die
+			Cadd("press - e up")
+		}
+
+		sleep 50
+		ControlSend, , {LCtrl}, 7 Days To Die
+		Cadd("press - LCtrl")
+		Sleep, 150
+
+		if (!running)
+			break
+	}
+	ControlSend, , {e up}, 7 Days To Die
+	Cadd("press - e up")
+
+	Cadd("automine stop")
+
+return
+
+; pickup stuff
+F11::
+	;Cadd("easy pickup")
+	;running := 1
+	;Loop
+	;{
+	;	GetKeyState, VKeyState, LAlt, P
+	;	if VKeyState = D
+	;	{
+	;		Send, e
+	;		Cadd("press - e")
+	;		GetKeyState, VKeyState, Shift
+	;		if VKeyState = D
+	;		{
+	;			TempWalk := 1
+	;			Send {shift up}
+	;		}
+	;	} else {
+	;		if TempWalk
+	;		{
+	;			TempWalk := 0
+	;			Send {shift down}
+	;		}
+	;	}
+
+	;	Sleep, 50
+	;	if (!running)
+	;		break
+	;}
+	;Cadd("easy pickup stop")
+	Cadd("auto pickup")
+	running := 1
+	Loop
+	{
+		Cadd("press - e")
+		ControlSend, , e, 7 Days To Die
+		Sleep, 200
+		if (!running)
+			break
+	}
+	Cadd("auto pickup stop")
+Return
+
+; planting
+'::
+	Cadd("planting")
+	running := 1
+	Loop
+	{
+		Cadd("press - LAlt")
+		ControlSend, , {LAlt}, 7 Days To Die
+		Sleep, 150
+
+		if (!running)
+			break
+	}
+	Cadd("planting stop")
+return
+
+F9::
+	Cadd("F9 thing")
+	running := 1
+	Loop
+	{
+		ControlSend, , {LAlt}, 7 Days To Die
+		Cadd("press - LAlt")
+		Sleep, 200
+
+		if (!running)
+			break
+	}
+	Cadd("F9 thing stop")
+return
+
+;CONSOLE CONTROLS
+Cadd(text)
+{
+   global
+   FormatTime, NowStamp, %A_now%, HH:mm:ss
+   text := NowStamp . " " . text
+   Ctext := text . "`n" . Ctext ;newest lines on top of course
+   GuiControl,consoleLog:, Ctext, %Ctext%
+}
+
+Cclear()
+{
+   global
+   FormatTime, NowStamp, %A_now%, HH:mm:ss
+   Ctext := "## " . NowStamp . " - CLEAR"
+   GuiControl,, Ctext, %Ctext%
+}
+
+Cexport(filename = 0)
+{
+   Global Ctext
+   If !filename
+   {
+      filename := a_scriptdir . "\ConsoleExport" . A_now . ".txt"
+   }
+
+   FileAppend, %Ctext%, %filename%
+   Run, Notepad.exe %filename%
+
+   Return
+}
+
+Cinit()
+{
+   ;; LOG CONSOLE GUI
+   Gui, consoleLog:Add, Edit,w400 h200 vCtext hScroll
+   Gui, consoleLog:Add, Button, gCexport y+5 x+-200, EXPORT
+   Gui, consoleLog:Add, Button, gCclear yp+0 x+-150, CLEAR
+   Gui, consoleLog:show, AutoSize x0 y0
+}
+
+Cexport:
+   Cexport()
+return
+
+Cclear:
+   Cclear()
+return
+
+;~LAlt::
+;	Cadd("disable Space")
+;	spaceDisabled := True
+;	SetTimer, enableSpace, -5000,
+;return
+
+enableSpace:
+	Cadd("enable Space")
+	spaceDisabled := False
+return
+
+#if spaceDisabled
+space::
+	Cadd("Space press blocked")
+return
+#if
